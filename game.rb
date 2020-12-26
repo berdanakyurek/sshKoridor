@@ -2,52 +2,18 @@ require 'colorize'
 require 'net/ssh'
 
 class Cell
+    attr_accessor :left
+    attr_accessor :right
+    attr_accessor :up
+    attr_accessor :down
+    attr_accessor :inside
+
     def initialize
         @left = false
         @right = false
         @up = false
         @down = false
         @inside = 0
-    end
-
-    def left
-        @left
-    end
-
-    def setLeft(x)
-        @left = x
-    end
-
-    def right
-        @right
-    end
-
-    def setRight(x)
-        @right = x
-    end
-
-    def up
-        @up
-    end
-
-    def setUp(x)
-        @up = x
-    end
-
-    def down
-        @down
-    end
-
-    def setDown(x)
-        @down = x
-    end
-
-    def inside
-        @inside
-    end
-
-    def setInside(x)
-        @inside = x
     end
 
     def swap # swaps up with down and left with right
@@ -61,8 +27,12 @@ class Cell
     end
 end
 
-class Wall
-
+class Wall          
+    attr_accessor :row
+    attr_accessor :col
+    attr_accessor :alignment
+    attr_accessor :centerR
+    attr_accessor :centerC
     def initialize(a, er, ec)
         @row = er
         @col = ec
@@ -76,26 +46,6 @@ class Wall
             @centerC = ec 
             
         end
-    end
-
-    def row
-        @row
-    end
-
-    def col
-        @col
-    end
-
-    def alignment
-        @alignment
-    end
-
-    def centerR
-        @centerR
-    end
-
-    def centerC
-        @centerC
     end
 
     def swap
@@ -116,11 +66,16 @@ class Wall
 end
 
 class GameBoard
+    attr_accessor :cells
+    attr_accessor :turn
+    attr_accessor :wallList
+    attr_accessor :p1Walls
+    attr_accessor :p2Walls
 
     def initialize
         @cells = Array.new(9) { Array.new(9) { Cell.new } }
-        @cells[0][4].setInside(2)
-        @cells[8][4].setInside(1)
+        @cells[0][4].inside = 2
+        @cells[8][4].inside = 1
         @turn = true # true: p1, false: p2
         @wallList = []
         @p1Walls = 10
@@ -129,37 +84,17 @@ class GameBoard
         for i in 0..8
             for j in 0..8
                 if i == 0
-                    @cells[i][j].setUp(true)
+                    @cells[i][j].up = true
                 elsif i == 8
-                    @cells[i][j].setDown(true)
+                    @cells[i][j].down = true
                 end
                 if j == 0
-                    @cells[i][j].setLeft(true)
+                    @cells[i][j].left = true
                 elsif j == 8
-                    @cells[i][j].setRight(true)
+                    @cells[i][j].right = true
                 end
             end
         end
-    end
-
-    def cells
-        @cells
-    end
-
-    def p1Walls
-        @p1Walls
-    end
-
-    def p2Walls
-        @p2Walls
-    end
-
-    def turn
-        @turn
-    end
-
-    def setTurn(x)
-        @turn = x
     end
 
     def toString
@@ -171,12 +106,8 @@ class GameBoard
                 str += "═══".white
             end
 
-            if i != 8
-                #puts wallList[1].centerR
-                #puts wallList[1].centerC
-                str += "╦".white
+            str += "╦".white if i != 8
                 
-            end
         end
         str += "╗".white
         str += "\n"
@@ -274,10 +205,6 @@ class GameBoard
         return toreturn
     end
 
-    def wallList
-        @wallList
-    end
-
     def findPlayer(player)
         a = 0
         b = 0
@@ -310,12 +237,12 @@ class GameBoard
             end
 
             if @cells[row-1][column].inside == 0
-                @cells[row][column].setInside(0)
-                @cells[row-1][column].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row-1][column].inside = playerToMove
             else
                 if @cells[row-1][column].up == false
-                    @cells[row][column].setInside(0)
-                    @cells[row-2][column].setInside(playerToMove)
+                    @cells[row][column].inside = 0
+                    @cells[row-2][column].inside = playerToMove
                 else
                     return false
                 end
@@ -330,49 +257,44 @@ class GameBoard
             end
 
             if @cells[row+1][column].inside == 0
-                @cells[row][column].setInside(0)
-                @cells[row+1][column].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row+1][column].inside = playerToMove
             else
                 if @cells[row+1][column].down == false
-                    @cells[row][column].setInside(0)
-                    @cells[row+2][column].setInside(playerToMove)
+                    @cells[row][column].inside = 0
+                    @cells[row+2][column].inside = playerToMove
                 else
                     return false
                 end
             end
         
         elsif direction == 3 # go left
-            if column == 0
-                return false
-            end
-            if @cells[row][column].left == true
-                return false
-            end
+            return false if column == 0
+                
+            return false if @cells[row][column].left == true
+                
             if @cells[row][column-1].inside == 0
-                @cells[row][column].setInside(0)
-                @cells[row][column-1].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row][column-1].inside = playerToMove
             else
                 if @cells[row][column-1].left == false
-                    @cells[row][column].setInside(0)
-                    @cells[row][column-2].setInside(playerToMove)
+                    @cells[row][column].inside = 0
+                    @cells[row][column-2].inside = playerToMove
                 else
                     return false
                 end
             end
         elsif direction == 4 # go right
-            if column == 8
-                return false
-            end
-            if @cells[row][column].right == true
-                return false
-            end
+            return false if column == 8
+            return false if @cells[row][column].right == true
+                
             if @cells[row][column+1].inside == 0
-                @cells[row][column].setInside(0)
-                @cells[row][column+1].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row][column+1].inside = playerToMove
             else
                 if @cells[row][column+1].right == false
-                    @cells[row][column].setInside(0)
-                    @cells[row][column+2].setInside(playerToMove)
+                    @cells[row][column].inside = 0
+                    @cells[row][column+2].inside = playerToMove
                 else
                     return false
                 end
@@ -381,11 +303,11 @@ class GameBoard
             if row == 0 || column == 0
                 return false
             elsif @cells[row-1][column].inside != 0 && @cells[row-1][column].up == true && @cells[row-1][column].left == false
-                @cells[row][column].setInside(0)
-                @cells[row-1][column-1].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row-1][column-1].inside = playerToMove
             elsif @cells[row][column-1].inside != 0 && @cells[row][column-1].left == true && @cells[row][column-1].up == false
-                @cells[row][column].setInside(0)
-                @cells[row-1][column-1].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row-1][column-1].inside = playerToMove
             else
                 return false
             end
@@ -394,11 +316,11 @@ class GameBoard
             if row == 0 || column == 8
                 return false
             elsif @cells[row-1][column].inside != 0 && @cells[row-1][column].up == true && @cells[row-1][column].right == false
-                @cells[row][column].setInside(0)
-                @cells[row-1][column+1].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row-1][column+1].inside = playerToMove
             elsif @cells[row][column+1].inside != 0 && @cells[row][column+1].right == true && @cells[row][column+1].up == false
-                @cells[row][column].setInside(0)
-                @cells[row-1][column+1].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row-1][column+1].inside = playerToMove
             else
                 return false
             end
@@ -406,11 +328,11 @@ class GameBoard
             if row == 8 || column == 0
                 return false
             elsif @cells[row][column-1].inside != 0 && @cells[row][column-1].left == true && @cells[row][column-1].down == false
-                @cells[row][column].setInside(0)
-                @cells[row+1][column-1].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row+1][column-1].inside = playerToMove
             elsif @cells[row+1][column].inside != 0 && @cells[row+1][column].down == true && @cells[row+1][column].left == false
-                @cells[row][column].setInside(0)
-                @cells[row+1][column-1].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row+1][column-1].inside = playerToMove
             else
                 return false
             end
@@ -418,11 +340,11 @@ class GameBoard
             if row == 8|| column == 8
                 return false
             elsif @cells[row][column+1].inside != 0 && @cells[row][column+1].right == true && @cells[row][column+1].down == false
-                @cells[row][column].setInside(0)
-                @cells[row+1][column+1].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row+1][column+1].inside = playerToMove
             elsif @cells[row+1][column].inside != 0 && @cells[row+1][column].down == true && @cells[row+1][column].right == false
-                @cells[row][column].setInside(0)
-                @cells[row+1][column+1].setInside(playerToMove)
+                @cells[row][column].inside = 0
+                @cells[row+1][column+1].inside = playerToMove
             else
                 return false
             end
@@ -467,53 +389,34 @@ class GameBoard
 
         if alignment == true
             if row != 0
-                if @cells[row-1][col].down == true
-                    return false
-                end
-                if @cells[row-1][col+1].down == true
-                    return false
-                end
+                return false if @cells[row-1][col].down == true
+                return false if @cells[row-1][col+1].down == true
 
-                @cells[row-1][col].setDown(true)
-                @cells[row-1][col+1].setDown(true)
+                @cells[row-1][col].down = true
+                @cells[row-1][col+1].down = true
             end
             if row != 9
-                if @cells[row][col].up == true
-                    return false
-                end
+                return false if @cells[row][col].up == true
+                return false if @cells[row][col+1].up == true
 
-                if @cells[row][col+1].up == true
-                    return false
-                end
-
-                @cells[row][col].setUp(true)
-                @cells[row][col+1].setUp(true)
+                @cells[row][col].up = true
+                @cells[row][col+1].up = true
             end
 
         elsif alignment == false
             if col != 0
-                if @cells[row][col-1].right == true
-                    return false
-                end
+                return false if @cells[row][col-1].right == true
+                return false if @cells[row+1][col-1].right == true
 
-                if @cells[row+1][col-1].right == true
-                    return false
-                end
-
-                @cells[row][col-1].setRight(true)
-                @cells[row+1][col-1].setRight(true)
+                @cells[row][col-1].right = true
+                @cells[row+1][col-1].right = true
             end
             if col != 9
-                if @cells[row][col].left == true
-                    return false
-                end
+                return false if @cells[row][col].left == true
+                return false if @cells[row+1][col].left == true
 
-                if @cells[row+1][col].left == true
-                    return false
-                end
-
-                @cells[row][col].setLeft(true)
-                @cells[row+1][col].setLeft(true)
+                @cells[row][col].left = true
+                @cells[row+1][col].left = true
             end
         end
 
@@ -555,25 +458,16 @@ class GameBoard
                     for j in 0..8
                         if matrix[i][j] == false
                             if i != 0
-                                #puts "werweer"
-                                if matrix[i-1][j] == true && @cells[i][j].up == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i-1][j] == true && @cells[i][j].up == false
                             end
                             if i != 8
-                                if matrix[i+1][j] == true && @cells[i][j].down == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i+1][j] == true && @cells[i][j].down == false
                             end
                             if j != 0
-                                if matrix[i][j-1] == true && @cells[i][j].left == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j-1] == true && @cells[i][j].left == false
                             end
                             if j != 8
-                                if matrix[i][j+1] == true && @cells[i][j].right == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j+1] == true && @cells[i][j].right == false
                             end
                         end
                     end
@@ -582,24 +476,16 @@ class GameBoard
                     while j >= 0
                         if matrix[i][j] == false
                             if i != 0
-                                if matrix[i-1][j] == true && @cells[i][j].up == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i-1][j] == true && @cells[i][j].up == false
                             end
                             if i != 8
-                                if matrix[i+1][j] == true && @cells[i][j].down == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i+1][j] == true && @cells[i][j].down == false
                             end
                             if j != 0
-                                if matrix[i][j-1] == true && @cells[i][j].left == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j-1] == true && @cells[i][j].left == false
                             end
                             if j != 8
-                                if matrix[i][j+1] == true && @cells[i][j].right == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j+1] == true && @cells[i][j].right == false
                             end
                         end
                         j -= 1
@@ -611,24 +497,16 @@ class GameBoard
                     for j in 0..8
                         if matrix[i][j] == false
                             if i != 0
-                                if matrix[i-1][j] == true && @cells[i][j].up == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i-1][j] == true && @cells[i][j].up == false
                             end
                             if i != 8
-                                if matrix[i+1][j] == true && @cells[i][j].down == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i+1][j] == true && @cells[i][j].down == false
                             end
                             if j != 0
-                                if matrix[i][j-1] == true && @cells[i][j].left == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j-1] == true && @cells[i][j].left == false
                             end
                             if j != 8
-                                if matrix[i][j+1] == true && @cells[i][j].right == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j+1] == true && @cells[i][j].right == false
                             end
                         end
                     end
@@ -638,24 +516,16 @@ class GameBoard
 
                         if matrix[i][j] == false
                             if i != 0
-                                if matrix[i-1][j] == true && @cells[i][j].up == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i-1][j] == true && @cells[i][j].up == false
                             end
                             if i != 8
-                                if matrix[i+1][j] == true && @cells[i][j].down == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i+1][j] == true && @cells[i][j].down == false
                             end
                             if j != 0
-                                if matrix[i][j-1] == true && @cells[i][j].left == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j-1] == true && @cells[i][j].left == false
                             end
                             if j != 8
-                                if matrix[i][j+1] == true && @cells[i][j].right == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j+1] == true && @cells[i][j].right == false
                             end
                         end
                         j -= 1
@@ -663,9 +533,8 @@ class GameBoard
                     i -= 1
                 end
 
-                if prevMatrix == matrix
-                    break
-                end
+                break if prevMatrix == matrix
+                
                 prevMatrix = Marshal.load(Marshal.dump(matrix))
             end
             
@@ -673,9 +542,7 @@ class GameBoard
             
 
             pLoc = findPlayer(1)
-            if matrix[pLoc[0]][pLoc[1]] == true
-                return true
-            end
+            return true if matrix[pLoc[0]][pLoc[1]] == true
             return false
         
         else
@@ -685,24 +552,16 @@ class GameBoard
                     for j in 0..8
                         if matrix[i][j] == false
                             if i != 0
-                                if matrix[i-1][j] == true && @cells[i][j].up == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i-1][j] == true && @cells[i][j].up == false
                             end
                             if i != 8
-                                if matrix[i+1][j] == true && @cells[i][j].down == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i+1][j] == true && @cells[i][j].down == false
                             end
                             if j != 0
-                                if matrix[i][j-1] == true && @cells[i][j].left == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j-1] == true && @cells[i][j].left == false
                             end
                             if j != 8
-                                if matrix[i][j+1] == true && @cells[i][j].right == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j+1] == true && @cells[i][j].right == false
                             end
                         end
                     end
@@ -712,24 +571,16 @@ class GameBoard
 
                         if matrix[i][j] == false
                             if i != 0
-                                if matrix[i-1][j] == true && @cells[i][j].up == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i-1][j] == true && @cells[i][j].up == false
                             end
                             if i != 8
-                                if matrix[i+1][j] == true && @cells[i][j].down == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i+1][j] == true && @cells[i][j].down == false
                             end
                             if j != 0
-                                if matrix[i][j-1] == true && @cells[i][j].left == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j-1] == true && @cells[i][j].left == false
                             end
                             if j != 8
-                                if matrix[i][j+1] == true && @cells[i][j].right == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j+1] == true && @cells[i][j].right == false
                             end
                         end
                         j -= 1
@@ -741,25 +592,16 @@ class GameBoard
                     for j in 0..8
                         if matrix[i][j] == false
                             if i != 0
-                                #puts "werweer"
-                                if matrix[i-1][j] == true && @cells[i][j].up == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i-1][j] == true && @cells[i][j].up == false 
                             end
                             if i != 8
-                                if matrix[i+1][j] == true && @cells[i][j].down == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i+1][j] == true && @cells[i][j].down == false
                             end
                             if j != 0
-                                if matrix[i][j-1] == true && @cells[i][j].left == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j-1] == true && @cells[i][j].left == false
                             end
                             if j != 8
-                                if matrix[i][j+1] == true && @cells[i][j].right == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j+1] == true && @cells[i][j].right == false
                             end
                         end
                     end
@@ -768,55 +610,30 @@ class GameBoard
                     while j >= 0
                         if matrix[i][j] == false
                             if i != 0
-                                if matrix[i-1][j] == true && @cells[i][j].up == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i-1][j] == true && @cells[i][j].up == false
                             end
                             if i != 8
-                                if matrix[i+1][j] == true && @cells[i][j].down == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i+1][j] == true && @cells[i][j].down == false
                             end
                             if j != 0
-                                if matrix[i][j-1] == true && @cells[i][j].left == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j-1] == true && @cells[i][j].left == false
                             end
                             if j != 8
-                                if matrix[i][j+1] == true && @cells[i][j].right == false
-                                    matrix[i][j] = true
-                                end
+                                matrix[i][j] = true if matrix[i][j+1] == true && @cells[i][j].right == false
                             end
                         end
                         j -= 1
                     end
                 end
 
-                if prevMatrix == matrix
-                    break
-                end
+                break if prevMatrix == matrix
+                    
                 prevMatrix = Marshal.load(Marshal.dump(matrix))
             end 
-            /
-            # Print matrix
-            for i in matrix 
-                for j in i
-                    print j
-                    print " "
-                    if j == true
-                        print " "
-                    end
-                end
-                print "\n"
-            end
-            ##end
-            /
+            
             pLoc = findPlayer(2)
-            if matrix[pLoc[0]][pLoc[1]] == true
-                return true
-            end
+            return true if matrix[pLoc[0]][pLoc[1]] == true
             return false
-
             
         end
     end
@@ -827,9 +644,7 @@ class GameBoard
 
     def hasCenter(r, c)
         for i in @wallList
-            if i.centerR == r && i.centerC == c
-                return true
-            end
+            return true if i.centerR == r && i.centerC == c
         end
         return false
     end
@@ -842,55 +657,8 @@ class GameBoard
         end
         return 0
     end
-
 end
-/
-board = GameBoard.new
 
-board.move(8)
-board.move(1)
-board.move(3)
-board.move(1)
-#board.move(2)
-#puts board.move(4)
-#puts board.move(4)
-#puts board.move(4)
-#puts board.move(4)
-#puts board.move(4)
-#puts board.move(4)
-#puts board.move(4)
-
-#puts board.move(1)
-#puts board.move(2)
-#puts board.move(1)
-#puts board.move(2)
-#puts board.move(1)
-board.addWall(true,1,0)
-board.addWall(true,1,2)
-board.addWall(true,1,4)
-board.addWall(true,1,6)
-board.addWall(false,1,8)
-board.addWall(true,3,7)
-board.addWall(false,3,8)
-board.addWall(false,5,8)
-board.addWall(true,7,6)
-board.addWall(true,7,4)
-board.addWall(true,7,2)
-board.addWall(false,5,2)
-board.addWall(true,5,2)
-board.addWall(true,5,4)
-#puts board.move(3)
-#puts board.addWall(false,0,1)
-
-#puts board.addWall(true,2,3)
-
-puts board.toString
-puts "hi"
-puts board.hasExit(2)
-puts "\n"
-
-#puts board.toString
-/
 board = GameBoard.new
 
 while(board.isGameOver == 0)
@@ -987,9 +755,7 @@ while(board.isGameOver == 0)
         else 
             board.addWall(false, row, col )
         end
-    end
-    
-
+    end  
 end
 
 a = board.isGameOver
