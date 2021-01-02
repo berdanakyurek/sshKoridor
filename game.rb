@@ -1,5 +1,6 @@
 require 'colorize'
 require 'net/ssh'
+require 'io/console'
 
 class Cell
     attr_accessor :left
@@ -97,10 +98,31 @@ class GameBoard
         end
     end
 
-    def toString
+    def toString(selAl = false, selR = 100, selC = 100)
+        backup = Marshal.load(Marshal.dump(@cells))
+        backupP1W = @p1Walls
+        backupP2W = @p2Walls
+        backupWalls = Marshal.load(Marshal.dump(@wallList))
+        possible = addWall(selAl, selR, selC)
+
+        @p1Walls = backupP1W
+        @p2Walls = backupP2W
+
+        @cells = backup
+        @wallList = backupWalls
+        if possible
+            @turn = !@turn
+        end
+
         str ="╔".white
         for i in 0..8
-            if @cells[0][i].up == false
+            if selAl == true && selR == 0 && (i == selC || i == selC + 1 )
+                if possible
+                    str += "═══".green
+                else
+                    str += "═══".red
+                end
+            elsif @cells[0][i].up == false
                 str += "═══".black
             else
                 str += "═══".white
@@ -113,39 +135,61 @@ class GameBoard
         str += "\n"
         a = 0
         for i in @cells do
-            if i[0].left == false
+            if selAl == false && selC == 0 && (a == selR || a == selR + 1 )
+                if possible
+                    str += "║".green
+                else
+                    str += "║".red
+                end
+            elsif i[0].left == false
                 str += "║".black
             else
                 str += "║".white
             end
-
+            cnt = 1
             for j in i do
+                #str += cnt.to_s
                 str += " "
                 if j.inside == 0
                     str += " "
                     #str += j.up.to_s[0]
                 elsif j.inside == 1
-                    str += j.inside.to_s.red
+                    str += j.inside.to_s.blue
                 else
                     str += j.inside.to_s.yellow
                 end
                 str += " "
-                if j.right == false
+                if selAl == false && selC == cnt && (a == selR || a == selR + 1 )
+                    if possible
+                        str += "║".green
+                    else
+                        str += "║".red
+                    end
+                elsif j.right == false
                     str += "║".black
                 else
                     str += "║".white
                 end
+                cnt += 1
             end
             cnt = 0
             str += "\n"
+            #str += a.to_s ###########################
             if a != 8
                 str += "╠".white
                 
             else
                 str += "╚".white
             end
+
             for j in i do
-                if j.down == false
+                if selAl == true && selR == a + 1 && (cnt == selC || cnt == selC + 1 )
+                    if possible
+                        str += "═══".green
+                    else
+                        str += "═══".red
+                    end
+                elsif j.down == false
                     str += "═══".black
                 else
                     str += "═══".white
@@ -178,8 +222,18 @@ class GameBoard
         return str
     end
 
-    def toStringReverse # returns board from player2's view
-        
+    def toStringReverse(selAl = false, selR = 100, selC = 100) # returns board from player2's view
+        if selR != 100 && selC != 100
+            if selAl == true
+                selC = 9-selC-2
+                selR = 9-selR
+            else
+                selC = 9-selC
+                selR = 9-selR-2
+            end
+        end
+
+
         backup = Marshal.load(Marshal.dump(@cells))
         backupWalls = Marshal.load(Marshal.dump(@wallList))
         
@@ -199,7 +253,7 @@ class GameBoard
         end
 
         @cells = a
-        toreturn = toString()
+        toreturn = toString(selAl, selR, selC)
         @cells = backup
         @wallList = backupWalls
         return toreturn
@@ -662,13 +716,12 @@ end
 board = GameBoard.new
 
 while(board.isGameOver == 0)
-    print "P" 
     if board.turn == true
-        print "1"
+        print "P1".blue
     else
-        print "2"
+        print "P2".yellow
     end 
-    puts "'s Turn"
+    puts "'s Turn (WASD-QEZX: move. B: build.)"
 
     print "P1 Walls: "
     puts board.p1Walls
@@ -683,9 +736,8 @@ while(board.isGameOver == 0)
     end
 
     puts "--------------------------------------------------------"
-    puts "Command: "
-    command = gets.chomp
-    puts command
+    command = STDIN.getch
+    
     if command == "w"
         if board.turn == true
             board.move(1)
@@ -745,21 +797,91 @@ while(board.isGameOver == 0)
             board.move(5)
         end
     
-    elsif command == "h" || command == "v"
-        puts "Enter row: "
-        row = gets.chomp.to_i
-        puts "Enter column: "
-        col = gets.chomp.to_i
-        if command == "h"
-            board.addWall(true, row, col )
-        else 
-            board.addWall(false, row, col )
+    elsif command == "b"
+        row = 0
+        col = 0
+        alignment = true
+        maxRow = 9
+        maxCol = 7
+
+        while true 
+            if board.turn == true
+                print "P1".blue
+            else
+                print "P2".yellow
+            end 
+            puts "'s Turn (Build Mode. WASD: move wall, R: rotate, Enter: build, Q: quit build mode.)"
+            print "P1 Walls: "
+            puts board.p1Walls
+            
+            print "P2 Walls: "
+            puts board.p2Walls
+
+            if board.turn == true
+                puts board.toString(alignment, row, col)
+            else 
+                puts board.toStringReverse(alignment, row, col)
+            end
+            puts "--------------------------------------------------------"
+
+            cmd = STDIN.getch
+
+            if board.turn == false
+                if cmd == "w"
+                    cmd = "s"
+                elsif cmd == "s"
+                    cmd = "w"
+                elsif cmd == "a"
+                    cmd = "d"
+                elsif cmd == "d"
+                    cmd = "a"
+                end
+
+            end
+            if cmd == "w" && row != 0
+                row -= 1
+            elsif cmd == "a" && col != 0
+                col -= 1 
+            elsif cmd == "s" && row != maxRow
+                row += 1
+            elsif cmd == "d" && col != maxCol
+                col += 1
+            elsif cmd == "\r"
+                    
+                if board.addWall(alignment, row, col )
+                    break
+                else
+                    next
+                end
+            elsif cmd == "q"
+                break
+            elsif cmd == "r"
+                if alignment == false && col <= 7
+                    alignment = true
+                    maxRow = 9
+                    maxCol = 7
+                elsif alignment == true && row <= 7
+                    alignment = false
+                    maxRow = 7
+                    maxCol = 9
+                end
+            end
+            
         end
-    end  
+
+    elsif command == "?"
+        break
+    end 
 end
 
 a = board.isGameOver
 puts board.toString
-print "P"
-print a
+
+if a == 1
+    print "P".blue
+    print a.to_s.blue 
+else
+    print "P".yellow
+    print a.to_s.yellow
+end
 puts " won!"
