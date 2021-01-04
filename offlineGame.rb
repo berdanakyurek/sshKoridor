@@ -1,7 +1,6 @@
 require 'colorize'
 require 'net/ssh'
 require 'io/console'
-require 'socket'
 
 class Cell
     attr_accessor :left
@@ -714,53 +713,30 @@ class GameBoard
     end
 end
 
-ip = '192.168.1.11'
-port = 22345
-
-s = TCPSocket.open(ip, port)   
-
-
 board = GameBoard.new
 
 while(board.isGameOver == 0)
-    p1STR = ""
-    p2STR = ""
-    turn = 
     if board.turn == true
-        p1STR += "P1".blue
-        p2STR += "P1".blue
+        print "P1".blue
     else
-        p1STR += "P2".yellow
-        p2STR += "P2".yellow
+        print "P2".yellow
     end 
-    p1STR += "'s Turn (WASD-QEZX: move. B: build.)\n"
-    p2STR += "'s Turn (WASD-QEZX: move. B: build.)\n"
+    puts "'s Turn (WASD-QEZX: move. B: build.)"
 
-    p1STR += "P1 Walls: "
-    p2STR += "P1 Walls: "
+    print "P1 Walls: "
+    puts board.p1Walls
     
-    p1STR += board.p1Walls.to_s
-    p2STR += board.p1Walls.to_s
-    
-    p1STR += "\nP2 Walls: "
-    p2STR += "\nP2 Walls: "
+    print "P2 Walls: "
+    puts board.p2Walls
 
-    p1STR += board.p2Walls.to_s
-    p2STR += board.p2Walls.to_s
+    if board.turn == true
+        puts board.toString
+    else
+        puts board.toStringReverse
+    end
 
-    p1STR += "\n"
-    p1STR += "\n"
-
-        p1STR += board.toString + "\n"
-        p2STR += board.toStringReverse + "\n"
-
-    p1STR += "--------------------------------------------------------\n"
-    p2STR += "--------------------------------------------------------\n"
-
-    s.write p1STR
-    s.write p2STR
-    s.write board.turn
-    command = s.read #STDIN.getch
+    puts "--------------------------------------------------------"
+    command = STDIN.getch
     
     if command == "w"
         if board.turn == true
@@ -829,15 +805,14 @@ while(board.isGameOver == 0)
         maxCol = 7
 
         while true 
-            
             if board.turn == true
-                s.print "P1".blue
+                print "P1".blue
             else
-                s.print "P2".yellow
+                print "P2".yellow
             end 
             puts "'s Turn (Build Mode. WASD: move wall, R: rotate, Enter: build, Q: quit build mode.)"
-            s.print "P1 Walls: "
-            s.puts board.p1Walls
+            print "P1 Walls: "
+            puts board.p1Walls
             
             print "P2 Walls: "
             puts board.p2Walls
