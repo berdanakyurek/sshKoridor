@@ -210,7 +210,8 @@ class GameBoard
 
                 if cnt == 8 
                     if a != 8
-                        str += "╣".white
+                        #str += "╣".white
+                        str += "x".white
                     else
                        str += "╝".white
                     end
@@ -714,7 +715,7 @@ class GameBoard
     end
 end
 
-ip = '192.168.1.11'
+ip = '192.168.1.8'
 port = 22345
 
 s = TCPSocket.open(ip, port)   
@@ -725,7 +726,6 @@ board = GameBoard.new
 while(board.isGameOver == 0)
     p1STR = ""
     p2STR = ""
-    turn = 
     if board.turn == true
         p1STR += "P1".blue
         p2STR += "P1".blue
@@ -749,19 +749,23 @@ while(board.isGameOver == 0)
     p2STR += board.p2Walls.to_s
 
     p1STR += "\n"
-    p1STR += "\n"
+    p2STR += "\n"
 
-        p1STR += board.toString + "\n"
-        p2STR += board.toStringReverse + "\n"
+    p1STR += board.toString + "\n"
+    p2STR += board.toStringReverse + "\n"
 
     p1STR += "--------------------------------------------------------\n"
     p2STR += "--------------------------------------------------------\n"
-
+    #puts p1STR.bytesize
     s.write p1STR
     s.write p2STR
+    #puts board.turn.bytesize
+    sleep 1
     s.write board.turn
-    command = s.read #STDIN.getch
+    puts "hoo"
+    command = s.recv(1024) #STDIN.getch
     
+    puts command
     if command == "w"
         if board.turn == true
             board.move(1)
@@ -829,27 +833,41 @@ while(board.isGameOver == 0)
         maxCol = 7
 
         while true 
-            
+            buildModeSTR = ""
             if board.turn == true
-                s.print "P1".blue
+                buildModeSTR += "P1".blue
             else
-                s.print "P2".yellow
+                buildModeSTR += "P2".yellow
             end 
-            puts "'s Turn (Build Mode. WASD: move wall, R: rotate, Enter: build, Q: quit build mode.)"
-            s.print "P1 Walls: "
-            s.puts board.p1Walls
+            buildModeSTR += "'s Turn (Build Mode. WASD: move wall, R: rotate, Enter: build, Q: quit build mode.)\n"
+            buildModeSTR += "P1 Walls: "
+            buildModeSTR += board.p1Walls.to_s
+            buildModeSTR += "\n"
             
-            print "P2 Walls: "
-            puts board.p2Walls
+            buildModeSTR += "P2 Walls: "
+            buildModeSTR += board.p2Walls.to_s
+            buildModeSTR += "\n"
 
             if board.turn == true
-                puts board.toString(alignment, row, col)
+                buildModeSTR += board.toString(alignment, row, col)
             else 
-                puts board.toStringReverse(alignment, row, col)
+                buildModeSTR += board.toStringReverse(alignment, row, col)
             end
-            puts "--------------------------------------------------------"
 
-            cmd = STDIN.getch
+            buildModeSTR += "\n"
+            buildModeSTR += "--------------------------------------------------------\n"
+            
+            if board.turn == true
+                s.write buildModeSTR
+                s.write p2STR
+            else
+                s.write p1STR
+                s.write buildModeSTR
+            end
+            sleep 1
+            s.write board.turn
+
+            cmd = s.recv(1024)
 
             if board.turn == false
                 if cmd == "w"
@@ -901,12 +919,14 @@ end
 
 a = board.isGameOver
 puts board.toString
-
+finalString = ""
 if a == 1
-    print "P".blue
-    print a.to_s.blue 
+    finalString += "P".blue
+    finalString += a.to_s.blue 
 else
-    print "P".yellow
-    print a.to_s.yellow
+    finalString += "P".yellow
+    finalString += a.to_s.yellow
 end
-puts " won!"
+finalString += " won!\n"
+
+s.write finalString
