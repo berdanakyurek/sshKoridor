@@ -5,6 +5,7 @@ import socket
 import sys
 import threading
 import traceback
+import time
 
 import paramiko
 from paramiko.py3compat import b, u, decodebytes
@@ -37,9 +38,9 @@ class Server(paramiko.ServerInterface):
 
     def check_auth_publickey(self, username, key):
         print("Auth attempt with key: " + u(hexlify(key.get_fingerprint())))
-        if (username == "berdan") and (key == self.good_pub_key):
-            return paramiko.AUTH_SUCCESSFUL
-        return paramiko.AUTH_FAILED
+        #if (username == "berdan") and (key == self.good_pub_key):
+        return paramiko.AUTH_SUCCESSFUL
+        #return paramiko.AUTH_FAILED
 
     def check_auth_gssapi_with_mic(
         self, username, gss_authenticated=paramiko.AUTH_FAILED, cc_file=None
@@ -57,16 +58,16 @@ class Server(paramiko.ServerInterface):
             `krb5_kuserok() man page
             <http://www.unix.com/man-page/all/3/krb5_kuserok/>`_
         """
-        if gss_authenticated == paramiko.AUTH_SUCCESSFUL:
-            return paramiko.AUTH_SUCCESSFUL
-        return paramiko.AUTH_FAILED
+        #if gss_authenticated == paramiko.AUTH_SUCCESSFUL:
+        return paramiko.AUTH_SUCCESSFUL
+        #return paramiko.AUTH_FAILED
 
     def check_auth_gssapi_keyex(
         self, username, gss_authenticated=paramiko.AUTH_FAILED, cc_file=None
     ):
-        if gss_authenticated == paramiko.AUTH_SUCCESSFUL:
-            return paramiko.AUTH_SUCCESSFUL
-        return paramiko.AUTH_FAILED
+        #if gss_authenticated == paramiko.AUTH_SUCCESSFUL:
+        return paramiko.AUTH_SUCCESSFUL
+        #return paramiko.AUTH_FAILED
 
     def enable_auth_gssapi(self):
         return True
@@ -160,10 +161,10 @@ except paramiko.SSHException:
 
 chan1 = t1.accept(20)
 print("between")
-chan1.send("Connected!")
+chan1.send("Connected!\r\n")
 chan2 = t2.accept(20)
 print("end")
-chan2.send("Connected!")
+chan2.send("Connected!\n")
 
 #os.system("ruby game.rb")
 #threadASD = threading.Thread(target=os.system, args=("ruby game.rb",))
@@ -173,25 +174,54 @@ chan2.send("Connected!")
 #for i in range(5):
 #threadASD.join()
 
-## I will try to use this code in order to use with client code 
-ip = '192.168.1.11'
+ip = '192.168.1.8'
 port = 22345
 s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 s.bind((ip,port))
 s.listen()
 print('Server is listening...')
 
+rbthr = threading.Thread(target=os.system, args=("ruby game.rb",))
+rbthr.start()
 
 rubyCode, addr = s.accept()
 print("found ruby code")
-#print(rubyCode)
-user1Str = rubyCode.recv(1024)
-print(user1Str.decode("ascii"))
-user2Str = rubyCode.recv(1024)
-print(user2Str)
-userTurn = rubyCode.recv(1024)
-print(userTurn)
 
-f = chan1.makefile("rU")
-command = f.readline().strip("\r\n")
-rubyCode.send(command.encode())
+while True:
+    #print(rubyCode)
+    print("waiting p1 string")
+    user1Str = rubyCode.recv(6000).decode("utf-8").replace("\n", "\r\n")
+    chan1.send(user1Str)
+    #print("ara")
+    print("waiting p2 string")
+    user2Str = rubyCode.recv(6000).decode("utf-8").replace("\n", "\r\n")
+    chan2.send(user2Str)
+    print("waiting turn")
+    userTurn = rubyCode.recv(1024).decode("utf-8")
+    #print(type(userTurn))
+    if userTurn != "true" and userTurn != "false":
+        chan1.send(userTurn)
+        chan2.send(userTurn)
+        break
+
+    if userTurn == "true":
+        userTurn = True
+    else:
+        userTurn = False
+
+    print("waiting for move")
+    if userTurn:
+        f = chan1.makefile("rU")
+        command = f.read(1)#.strip("\r\n")
+        time.sleep(1)
+        rubyCode.send(command)
+        print("sent")
+    else:
+        f = chan2.makefile("rU")
+        command = f.read(1)#.strip("\r\n")
+        print("2")
+        print(command)
+        rubyCode.send(command)
+
+    print("got move!")
+
