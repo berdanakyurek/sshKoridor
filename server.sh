@@ -2,4 +2,8 @@
 while true
 do
     python3 server.py
+<<<<<<< Updated upstream
 done
+=======
+done
+>>>>>>> Stashed changes

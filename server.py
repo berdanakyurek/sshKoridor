@@ -125,7 +125,7 @@ except Exception as e:
 
 print("Got second connection!")
 
-DoGSSAPIKeyExchange = False
+DoGSSAPIKeyExchange = True
 
 t1 = paramiko.Transport(client1, gss_kex=DoGSSAPIKeyExchange)
 t2 = paramiko.Transport(client2, gss_kex=DoGSSAPIKeyExchange)
@@ -160,10 +160,9 @@ except paramiko.SSHException:
     sys.exit(1)
 
 chan1 = t1.accept(20)
-print("between")
 chan1.send("Connected!\r\n")
+
 chan2 = t2.accept(20)
-print("end")
 chan2.send("Connected!\n")
 
 #os.system("ruby game.rb")
@@ -189,14 +188,14 @@ print("found ruby code")
 
 while True:
     #print(rubyCode)
-    print("waiting p1 string")
+    #print("waiting p1 string")
     user1Str = rubyCode.recv(6000).decode("utf-8").replace("\n", "\r\n")
     chan1.send(user1Str)
     #print("ara")
-    print("waiting p2 string")
+    #print("waiting p2 string")
     user2Str = rubyCode.recv(6000).decode("utf-8").replace("\n", "\r\n")
     chan2.send(user2Str)
-    print("waiting turn")
+    #print("waiting turn")
     userTurn = rubyCode.recv(1024).decode("utf-8")
     #print(type(userTurn))
     if userTurn != "true" and userTurn != "false":
@@ -214,13 +213,13 @@ while True:
         f = chan1.makefile("rU")
         command = f.read(1)#.strip("\r\n")
         rubyCode.send(command)
-        print("sent")
+        #print("sent")
     else:
         f = chan2.makefile("rU")
         command = f.read(1)#.strip("\r\n")
-        print("2")
-        print(command)
+        #print("2")
+        #print(command)
         rubyCode.send(command)
 
-    print("got move!")
+    #print("got move!")
 

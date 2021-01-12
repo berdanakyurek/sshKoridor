@@ -750,8 +750,8 @@ while(board.isGameOver == 0)
     p1STR += "\n"
     p2STR += "\n"
 
-    p1STR += board.toString + "\n"
-    p2STR += board.toStringReverse + "\n"
+    p1STR += board.toString 
+    p2STR += board.toStringReverse 
 
     p1STR += "--------------------------------------------------------\n"
     p2STR += "--------------------------------------------------------\n"
@@ -853,7 +853,7 @@ while(board.isGameOver == 0)
                 buildModeSTR += board.toStringReverse(alignment, row, col)
             end
 
-            buildModeSTR += "\n"
+            #buildModeSTR += "\n"
             buildModeSTR += "--------------------------------------------------------\n"
             
             if board.turn == true
