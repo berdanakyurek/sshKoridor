@@ -755,13 +755,18 @@ while(board.isGameOver == 0)
 
     p1STR += "--------------------------------------------------------\n"
     p2STR += "--------------------------------------------------------\n"
-    #puts p1STR.bytesize
+    puts p1STR.bytesize.to_s.bytesize
+    s.write p1STR.bytesize.to_s
+    sleep 0.1
     s.write p1STR
+
+    s.write p2STR.bytesize.to_s
+    sleep 0.1
     s.write p2STR
     #puts board.turn.bytesize
-    sleep 1
+    sleep 0.1
     s.write board.turn
-    puts "hoo"
+    #puts "hoo"
     command = s.recv(1024) #STDIN.getch
     
     puts command
