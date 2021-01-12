@@ -73,7 +73,7 @@ class Server(paramiko.ServerInterface):
         return True
 
     def get_allowed_auths(self, username):
-        return "gssapi-keyex,gssapi-with-mic,password,publickey"
+        return "password,publickey"
 
     def check_channel_shell_request(self, channel):
         self.event.set()
@@ -125,7 +125,7 @@ except Exception as e:
 
 print("Got second connection!")
 
-DoGSSAPIKeyExchange = True
+DoGSSAPIKeyExchange = False
 
 t1 = paramiko.Transport(client1, gss_kex=DoGSSAPIKeyExchange)
 t2 = paramiko.Transport(client2, gss_kex=DoGSSAPIKeyExchange)
@@ -174,7 +174,7 @@ chan2.send("Connected!\n")
 #for i in range(5):
 #threadASD.join()
 
-ip = '192.168.1.8'
+ip = '127.0.0.1'
 port = 22345
 s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 s.bind((ip,port))
@@ -213,7 +213,6 @@ while True:
     if userTurn:
         f = chan1.makefile("rU")
         command = f.read(1)#.strip("\r\n")
-        time.sleep(1)
         rubyCode.send(command)
         print("sent")
     else:

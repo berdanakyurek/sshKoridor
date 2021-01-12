@@ -1,5 +1,4 @@
 require 'colorize'
-require 'net/ssh'
 require 'io/console'
 require 'socket'
 
@@ -210,8 +209,8 @@ class GameBoard
 
                 if cnt == 8 
                     if a != 8
-                        #str += "╣".white
-                        str += "x".white
+                        str += "╣".white
+                        #str += "x".white
                     else
                        str += "╝".white
                     end
@@ -715,7 +714,7 @@ class GameBoard
     end
 end
 
-ip = '192.168.1.8'
+ip = '127.0.0.1'
 port = 22345
 
 s = TCPSocket.open(ip, port)   
