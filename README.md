@@ -16,9 +16,11 @@ Q-E-Z-X to move cross (possible only in some special cases).
 
 B to pass to build mode. 
 
-  Q to leave build mode.
+  Q to leave build mode. (In build mode)
   
-  W-A-S-D to move the wall to be placed.
+  R to rotate wall. (In build mode)
   
-  ENTER to place the wall.
+  W-A-S-D to move the wall to be placed. (In build mode)
+  
+  ENTER to place the wall. (In build mode)
 
